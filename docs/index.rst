@@ -1,9 +1,6 @@
 Natural Organic Matter Workflow
 ================================
 
-Workflow Diagram
-------------------
-
 .. image:: enviromsworkflow.png
 
 Workflow Overview
