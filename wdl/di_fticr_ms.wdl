@@ -40,10 +40,11 @@ task runDirectInfusion {
         Boolean plot_ms_classes
         Boolean plot_mz_error_classes
         Int jobs_count = 1
+        String? docker_image
     }
 
     command {
-        enviroMS run-di-wdl \
+        enviroMS run_di_wdl \
             ${sep=',' file_paths} \
             ${output_directory} \
             ${output_type} \
