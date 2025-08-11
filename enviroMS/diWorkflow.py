@@ -155,8 +155,8 @@ def generate_database(corems_parameters_file, jobs):
     MolecularCombinations().runworker(molecular_search_settings)
 
 
-def read_workflow_parameter(di_workflow_paramaters_toml_file):
-    with open(di_workflow_paramaters_toml_file, "r") as infile:
+def read_workflow_parameter(di_workflow_parameters_toml_file):
+    with open(di_workflow_parameters_toml_file, "r") as infile:
         return DiWorkflowParameters(**toml.load(infile))
 
 

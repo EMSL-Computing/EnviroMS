@@ -136,32 +136,32 @@ def run_di_wdl(*args, **kwargs):
 
 
 @cli.command(name="run_di")
-@click.argument("di_workflow_paramaters_file", required=True, type=str)
+@click.argument("di_workflow_parameters_file", required=True, type=str)
 @click.option("--jobs", "-j", default=4, help="'cpu's'")
 @click.option("--replicas", "-r", default=1, help="data replicas")
 @click.option("--tasks", "-t", default=4, help="mpi tasks")
 @click.option("--mpi", "-m", is_flag=True, help="run mpi version")
-def run_di(di_workflow_paramaters_file, jobs, replicas, tasks, mpi):
+def run_di(di_workflow_parameters_file, jobs, replicas, tasks, mpi):
     """Run the Direct Infusion Workflow\n
-    workflow_paramaters_file = toml file with workflow parameters\n
+    workflow_parameters_file = toml file with workflow parameters\n
     output_types = csv, excel, pandas, json set on the parameter file\n
     corems_toml_path = toml file with corems parameters\n
     --jobs = number of processes to run in parallel\n
     --mpi = run on hpc, if omitted will run python's multiprocessing and will duplicate runs on nodes\n
     """
     if mpi:
-        run_di_mpi(di_workflow_paramaters_file, tasks, replicas)
+        run_di_mpi(di_workflow_parameters_file, tasks, replicas)
 
     else:
-        run_direct_infusion_workflow(di_workflow_paramaters_file, jobs, replicas)
+        run_direct_infusion_workflow(di_workflow_parameters_file, jobs, replicas)
 
 
 
 @cli.command(name="run_lc_fticr")
-@click.argument("lc_fticr_workflow_paramaters_file", required=True, type=str)
-def run_lc_fticr(lc_fticr_workflow_paramaters_file):
+@click.argument("lc_fticr_workflow_parameters_file", required=True, type=str)
+def run_lc_fticr(lc_fticr_workflow_parameters_file):
     """Run the LC-FTICR workflow"""
-    run_LC_FTICR_workflow(lc_fticr_workflow_paramaters_file)
+    run_LC_FTICR_workflow(lc_fticr_workflow_parameters_file)
 
 
 @cli.command(name="run_lc_fticr_wdl")
