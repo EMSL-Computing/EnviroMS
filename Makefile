@@ -95,9 +95,17 @@ wdl-run-di :
  	 
 	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
 
+wdl-run-di-local :
+ 	 
+	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
+
 wdl-run-lc :
  	 
 	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+
+wdl-run-lc-local:
+
+	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
 get-lcms-fticr-test-data:
 
@@ -132,6 +140,4 @@ get-lcms-fticr-test-data:
 	else echo "Reference file exists"; fi
 	@echo "LC-MS FT-ICR test files complete"
 
-wdl-run-lc-local:
 
-	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
