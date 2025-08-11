@@ -1,7 +1,14 @@
 version 1.0
 
 workflow fticrmsNOM {
-    call runDirectInfusion
+    input {
+        String? docker_image  # Optional input for Docker image
+    }
+
+    call runDirectInfusion {
+        input:
+            docker_image = docker_image
+    }
 
     output {
         String out = runDirectInfusion.out
@@ -67,6 +74,6 @@ task runDirectInfusion {
     }
 
     runtime {
-        docker: "microbiomedata/enviroms:5.0.0"
+        docker: "~{if defined(docker_image) then docker_image else 'microbiomedata/enviroms:5.0.0'}"
     }
 }
