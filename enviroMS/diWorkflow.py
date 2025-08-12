@@ -41,7 +41,7 @@ class DiWorkflowParameters:
     polarity: int = -1
     is_centroid: bool = False
     # corems settings
-    corems_toml_path: str = "configuration/corems.toml"
+    corems_toml_path: str = "configuration/di_corems.toml"
     nmdc_metadata_path: str = "configuration/nmdc_metadata.json"
     # calibration
     calibrate: bool = True
@@ -61,17 +61,17 @@ class DiWorkflowParameters:
 
 
 def run_thermo_reduce_profile(file_location, corems_params_path, first_scan, last_scan):
+    print("run thermo reduce profile")
     from corems.mass_spectra.input import rawFileReader
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
 
-    mass_spectrum = parser.get_average_mass_spectrum_in_scan_range(
-        first_scan=first_scan, last_scan=last_scan
-    )
+    mass_spectrum = parser.get_average_mass_spectrum()
     return mass_spectrum
 
 
 def run_bruker_transient(file_location, corems_params_path):
+    print("run bruker transient")
     with ReadBrukerSolarix(file_location) as transient:
         transient.set_parameter_from_toml(corems_params_path)
         mass_spectrum = transient.get_mass_spectrum(
@@ -82,6 +82,7 @@ def run_bruker_transient(file_location, corems_params_path):
 
 
 def get_masslist(file_location, corems_params_path, polarity, is_centroid):
+    print("get masslist")
     if is_centroid:
         reader = ReadMassList(file_location)
     else:
@@ -95,6 +96,7 @@ def get_masslist(file_location, corems_params_path, polarity, is_centroid):
 
 
 def run_assignment(file_location, workflow_params):
+    print("run assignment")
     file_path = Path(file_location)
 
     if file_path.suffix == ".raw":
@@ -139,6 +141,7 @@ def run_assignment(file_location, workflow_params):
 
 
 def generate_database(corems_parameters_file, jobs):
+    print("generate database")
     """Create molecular formula database.
     corems_parameters_file: Path for CoreMS TOML Parameters file
     --jobs: Number of processes to run
@@ -156,11 +159,13 @@ def generate_database(corems_parameters_file, jobs):
 
 
 def read_workflow_parameter(di_workflow_parameters_toml_file):
+    print("read workflow parameter")
     with open(di_workflow_parameters_toml_file, "r") as infile:
         return DiWorkflowParameters(**toml.load(infile))
 
 
 def create_plots(mass_spectrum, workflow_params, dirloc):
+    print("create plots")
     ms_by_classes = HeteroatomsClassification(
         mass_spectrum, choose_molecular_formula=False
     )
@@ -226,6 +231,7 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
 
 
 def workflow_worker(args):
+    print("workflow worker")
     file_location, workflow_params_toml_str = args
 
     workflow_params = DiWorkflowParameters(**toml.loads(workflow_params_toml_str))
@@ -249,6 +255,7 @@ def workflow_worker(args):
     return "Success" + str(os.getpid())
 
 
+# Resource profiling. not used.
 def cprofile_worker(file_location, workflow_params_toml_str):
     cProfile.runctx(
         "run_assignment(file_location, workflow_params)",
@@ -261,6 +268,7 @@ def cprofile_worker(file_location, workflow_params_toml_str):
 
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
+    print("run wdl direct infusion workflow")
     cores = kwargs.get("jobs")
     del kwargs["jobs"]
     kwargs["polarity"] = -1 if kwargs.get("polarity") == "negative" else 1
@@ -295,20 +303,25 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
         for file_path in workflow_params.file_paths
     ]
     file_path = Path(worker_args[0][0])
-    # for worker_arg in worker_args:
-    #    workflow_worker(worker_arg)
+    print(file_path)
+    for worker_arg in worker_args:
+       workflow_worker(worker_arg)
 
-    for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
-        pass
+    # multithreading doesn't work for some reason
+    # for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
+    #     pass
+    print("hellooooo")
     pool.close()
     pool.join()
 
 
 def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
-    click.echo("Loading Searching Settings from %s" % workflow_params_file)
+    print("run direct infusion workflow")
 
+    click.echo("Loading Searching Settings from %s" % workflow_params_file)
     workflow_params = read_workflow_parameter(workflow_params_file)
 
+    # Set up paths
     dirloc = Path(workflow_params.output_directory)
     dirloc.mkdir(exist_ok=True)
 

@@ -128,7 +128,7 @@ def create_database(corems_parameters_file, jobs):
 @click.option("--plot_van_krevelen", "-vk", default=True)
 @click.option("--plot_ms_classes", "-mc", default=True)
 @click.option("--plot_mz_error_classes", "-ec", default=True)
-@click.option("--jobs", "-j", default=4, help="'cpu's'")
+@click.option("--jobs", "-j", default=1, help="'cpu's'")
 def run_di_wdl(*args, **kwargs):
     """Run the Direct Infusion Workflow using wdl"""
 
