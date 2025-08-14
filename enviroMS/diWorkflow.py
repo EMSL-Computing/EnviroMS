@@ -57,6 +57,7 @@ class DiWorkflowParameters:
     plot_van_krevelen: bool = True
     plot_ms_classes: bool = True
     plot_mz_error_classes: bool = True
+    plot_qc: bool = True
 
     def to_toml(self):
         return toml.dumps(asdict(self))
@@ -111,6 +112,8 @@ def read_fticr_raw_data(file_location, workflow_params):
             polarity=workflow_params.polarity,
             is_centroid=workflow_params.is_centroid,
         )
+    
+    return mass_spectrum
 
 
 def get_masslist(file_location, corems_params_path, polarity, is_centroid):
@@ -243,8 +246,8 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
     # Create QC plots
     if workflow_params.plot_qc:
         ms_df = mass_spectrum.to_dataframe()
-        qc_fig, qc_axes = create_qc_figure(mass_spec, ms_df, title=mass_spec.sample_name,  hspace=0.25, wspace=0.35)
-        qc_fig.savefig(qc_plot_dirloc / "{}_qc.png".format(mass_spec.sample_name), dpi=100, bbox_inches='tight')
+        qc_fig, qc_axes = create_qc_figure(mass_spectrum, ms_df, title=mass_spectrum.sample_name,  hspace=0.25, wspace=0.35)
+        qc_fig.savefig(qc_plot_dirloc / "{}_qc.png".format(mass_spectrum.sample_name), dpi=100, bbox_inches='tight')
         plt.close(qc_fig)
         plt.close('all')
 
