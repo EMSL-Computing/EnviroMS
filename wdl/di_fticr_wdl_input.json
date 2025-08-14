@@ -10,7 +10,6 @@
     "fticrmsNOM.runDirectInfusion.calibration_ref_file_path": "./data/reference/SRFA.ref",
     
     "fticrmsNOM.runDirectInfusion.corems_toml_path": "./configuration/di_corems.toml",
-    "fticrmsNOM.runDirectInfusion.nmdc_metadata_path": "./configuration/nmdc_metadata.json",
 
     "fticrmsNOM.runDirectInfusion.polarity": "negative",
     "fticrmsNOM.runDirectInfusion.is_centroid": true,

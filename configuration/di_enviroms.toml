@@ -7,7 +7,6 @@ output_type = "csv"
 polarity = -1
 is_centroid = true
 corems_toml_path = "configuration/corems.toml"
-nmdc_metadata_path = "configuration/nmdc_metadata.json"
 calibrate = true
 calibration_ref_file_path = "data/raw_data/SRFA.ref"
 plot_mz_error = true

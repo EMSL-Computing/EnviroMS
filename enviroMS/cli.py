@@ -115,7 +115,6 @@ def create_database(corems_parameters_file, jobs):
 @click.argument("output_directory", required=True, type=str)
 @click.argument("output_type", required=True, type=str)
 @click.argument("corems_toml_path", required=True, type=str)
-@click.argument("nmdc_metadata_path", required=True, type=str)
 @click.argument("polarity", required=True, type=str)
 @click.argument("raw_file_start_scan", required=True, type=int)
 @click.argument("raw_file_final_scan", required=True, type=int)

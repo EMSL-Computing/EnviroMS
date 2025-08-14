@@ -45,7 +45,6 @@ class DiWorkflowParameters:
     is_centroid: bool = False
     # corems settings
     corems_toml_path: str = "configuration/di_corems.toml"
-    nmdc_metadata_path: str = "configuration/nmdc_metadata.json"
     # calibration
     calibrate: bool = True
     calibration_ref_file_path: str = "data/raw_data/SRFA.ref"

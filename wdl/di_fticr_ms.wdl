@@ -27,7 +27,6 @@ task runDirectInfusion {
         String output_directory
         String output_type
         File corems_toml_path
-        File nmdc_metadata_path
         String polarity
         Int raw_file_start_scan
         Int raw_file_final_scan
@@ -50,7 +49,6 @@ task runDirectInfusion {
             ${output_directory} \
             ${output_type} \
             ${corems_toml_path} \
-            ${nmdc_metadata_path} \
             ${polarity} \
             ${raw_file_start_scan} \
             ${raw_file_final_scan} \
