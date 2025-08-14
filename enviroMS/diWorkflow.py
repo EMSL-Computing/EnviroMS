@@ -205,6 +205,10 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
         mz_error_class_dirloc = dirloc / "mz_error_class"
         mz_error_class_dirloc.mkdir(exist_ok=True, parents=True)
 
+    if workflow_params.plot_qc:
+        qc_plot_dirloc = dirloc / "qc_plots"
+        qc_plot_dirloc.mkdir(exist_ok=True, parents=True)
+
     pbar = tqdm(ms_by_classes.get_classes())
 
     for classe in pbar:
@@ -235,6 +239,14 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
             ax_c = ms_by_classes.plot_dbe_vs_carbon_number(classe)
             plt.savefig(c_dbe_dirloc / "{}.png".format(classe), bbox_inches="tight")
             plt.clf()
+    
+    # Create QC plots
+    if workflow_params.plot_qc:
+        ms_df = mass_spectrum.to_dataframe()
+        qc_fig, qc_axes = create_qc_figure(mass_spec, ms_df, title=mass_spec.sample_name,  hspace=0.25, wspace=0.35)
+        qc_fig.savefig(qc_plot_dirloc / "{}_qc.png".format(mass_spec.sample_name), dpi=100, bbox_inches='tight')
+        plt.close(qc_fig)
+        plt.close('all')
 
 
 def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, ncols=4, hspace=0.22, wspace=0.22):
@@ -417,17 +429,6 @@ def workflow_worker(args):
     )
 
     create_plots(mass_spec, workflow_params, dirloc)
-
-    ms_df = mass_spec.to_dataframe()
-    qc_fig, qc_axes = create_qc_figure(mass_spec, ms_df, title=mass_spec.sample_name,  hspace=0.25, wspace=0.35)
-
-    (dirloc / "qc_plots").mkdir(exist_ok=True, parents=True)
-
-    qc_fig.savefig(dirloc / "qc_plots" / "{}_qc.png".format(mass_spec.sample_name), dpi=100, bbox_inches='tight')
-    plt.close(qc_fig)
-    plt.close('all')
-
-
 
     return "Success" + str(os.getpid())
 

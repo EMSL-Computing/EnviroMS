@@ -21,7 +21,8 @@
     "fticrmsNOM.runDirectInfusion.plot_c_dbe":  true,
     "fticrmsNOM.runDirectInfusion.plot_van_krevelen": true,
     "fticrmsNOM.runDirectInfusion.plot_ms_classes": true,
-    "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": true
+    "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": true,
+    "fticrmsNOM.runDirectInfusion.plot_qc": true
     
 
 }

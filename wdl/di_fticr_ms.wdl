@@ -39,6 +39,7 @@ task runDirectInfusion {
         Boolean plot_van_krevelen
         Boolean plot_ms_classes
         Boolean plot_mz_error_classes
+        Boolean plot_qc
         Int jobs_count = 1
         String? docker_image
     }
@@ -61,6 +62,7 @@ task runDirectInfusion {
             -vk ${plot_van_krevelen} \
             -mc ${plot_ms_classes} \
             -ec ${plot_mz_error_classes} \
+            -qc ${plot_qc} \
             --jobs ${jobs_count}
     }
 

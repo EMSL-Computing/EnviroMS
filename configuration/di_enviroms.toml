@@ -15,3 +15,4 @@ plot_c_dbe = true
 plot_van_krevelen = true
 plot_ms_classes = true
 plot_mz_error_classes = true
+plot_qc = true
