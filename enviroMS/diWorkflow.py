@@ -20,7 +20,10 @@ from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFor
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from matplotlib import pyplot as plt
+from matplotlib import gridspec as gridspec
 from tqdm import tqdm
+import pandas as pd
+import seaborn as sns
 
 
 @dataclass
@@ -230,6 +233,171 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
             plt.clf()
 
 
+
+
+
+def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, ncols=4, hspace=0.22, wspace=0.22):
+    """
+    Creates a QC matplotlib figure with a specified gridspec layout.
+    Thread-safe: returns a new figure and axes on each call.
+    
+    Parameters:
+        figsize (tuple): Size of the full figure (width, height).
+        nrows (int): Number of subplot rows.
+        ncols (int): Number of subplot columns.
+        hspace (float): Height spacing between rows.
+        wspace (float): Width spacing between columns.
+        
+    Returns:
+        fig (matplotlib.figure.Figure): The figure object.
+        axes (list of matplotlib.axes._subplots.AxesSubplot): List of axes.
+    """
+    
+    # ensure that key element columns were initiated or it could crash:
+    key_elements = ['C','H','O','N','S','P']
+    for ele in key_elements:
+        if ele not in msdf.columns:
+            msdf[ele] = 0
+    msdf[key_elements] = msdf[key_elements].fillna(0)
+    
+    mz = msobj.mz_cal_profile
+    abu = msobj.abundance_profile
+    
+    def subset_mz(mz_array, abu_array, mz_min, mz_max):
+        idx = (mz_array >= mz_min) & (mz_array <= mz_max)
+        return mz_array[idx], abu_array[idx]
+    
+    fig = plt.figure(figsize=figsize)
+    gs = gridspec.GridSpec(nrows, ncols, figure=fig, hspace=hspace, wspace=wspace)
+    axes = [fig.add_subplot(gs[row, col]) for row in range(nrows) for col in range(ncols)]
+    
+    
+    ###########
+    # Mass Spectrum
+    ############
+    # Full spectrum plot
+    axes[0].plot(mz, abu, lw=1,c='k')
+    
+    # Zoom 1
+    mz_zoom1, abu_zoom1 = subset_mz(mz, abu, 200, 800)
+    axes[1].plot(mz_zoom1, abu_zoom1, lw=1, c='k')  # y-limits autoscale
+    axes[1].set_ylim(0, 0.1*max(abu))
+    axes[1].set_xlim(200, 800)
+    
+    # Zoom 2
+    mz_zoom2, abu_zoom2 = subset_mz(mz, abu, 282.95, 283.2)
+    axes[4].plot(mz_zoom2, abu_zoom2, lw=1, c='k')
+    
+    # Zoom 4
+    mz_zoom3, abu_zoom3 = subset_mz(mz, abu, 571.0,571.25)
+    axes[5].plot(mz_zoom3, abu_zoom3, lw=1, c='k')
+
+    intensity_label = 'Intensity (a.u.)'
+    axes[0].set_ylabel(intensity_label)
+    axes[1].set_ylabel(intensity_label)
+    axes[4].set_ylabel(intensity_label)
+    axes[5].set_ylabel(intensity_label)
+
+    mass_label = '$m/z$'
+    axes[0].set_xlabel(mass_label)
+    axes[1].set_xlabel(mass_label)
+    axes[4].set_xlabel(mass_label)
+    axes[5].set_xlabel(mass_label)
+    
+
+    #########
+    # Error Plot
+    #########
+    
+    axes[2].scatter(msdf['m/z'], msdf['m/z Error (ppm)'], s=msdf['S/N']*0.01, c='k',alpha=0.5)
+    axes[2].set_ylabel('$m/z$ Error (ppm)')
+    axes[2].set_xlabel(mass_label)
+
+    #########
+    # Van Krevelen 
+    #########
+    
+    axes[3].scatter(msdf['O/C'], msdf['H/C'], s=msdf['S/N']*0.01, c='k',alpha=0.5)
+    axes[3].set_ylabel('H/C')
+    axes[3].set_xlabel('O/C')
+    axes[3].set_xlim(0, 1.25)
+    axes[3].set_ylim(0.25,2.25)
+    plt.show()
+    
+    #########
+    # Heteroatom Countplot
+    #########
+    # Filter the dataframe
+    df_filtered = msdf[
+        (msdf['Heteroatom Class'] != 'unassigned') &
+        (msdf['Is Isotopologue'] == 0)
+    ].copy()
+    
+    # Classify entries based on heteroatom presence
+    def group_hetero(row):
+       if row['S'] > 0:
+           return 'S > 0'
+       elif row['N'] > 0:
+           return 'N > 0'
+       #elif row['P'] > 0: # No P in MAOM
+       #    return 'P > 0'
+       else:
+           return 'No S/N'#'/P'
+       
+    df_filtered['Hetero Group'] = df_filtered.apply(group_hetero, axis=1)
+    # Sort O values numerically for better x-axis order
+    df_filtered['O'] = pd.to_numeric(df_filtered['O'], errors='coerce').fillna(0).astype(int)
+    
+    # Sort hetero groups in desired priority
+    #group_order = ['No S/N/P', 'S > 0', 'N > 0', 'P > 0']
+    # if excluding P from annotation
+    group_order = ['No S/N', 'S > 0', 'N > 0']
+
+    sns.countplot(
+        data=df_filtered,
+        x='O',
+        hue='Hetero Group',
+        order=sorted(df_filtered['O'].unique()),
+        hue_order=group_order,
+        ax=axes[6]
+    )
+    
+    axes[6].tick_params(axis='x', labelsize=10, rotation=45)
+    
+    legend = axes[6].legend(
+            title='Hetero Group',
+            fontsize=8,
+            title_fontsize=9,
+            loc='best',
+            frameon=True,
+            borderpad=0.3,
+            handletextpad=0.3,
+            borderaxespad=0.3,
+            labelspacing=0.3,
+            handlelength=1
+        )
+
+    #########
+    # NOSC KDE
+    #########
+
+    def NOSCcalc(df):
+        NOSC = 4 - ((4*df['C'] + df['H'] - 2*df['O'] - 3*df['N'] + 5*df['P'] - 2*df['S']) / df['C'])
+        return NOSC
+
+    msdf['NOSC'] = NOSCcalc(msdf)
+    sns.kdeplot(data=msdf, x='NOSC',ax=axes[7], c= 'k')
+    axes[7].set_xlim(-2.5,2.5)
+    
+    fig.suptitle(title, fontsize=24, y=0.95)
+    
+    print("made qc plots")
+    return fig, axes
+
+
+
+
+
 def workflow_worker(args):
     print("workflow worker")
     file_location, workflow_params_toml_str = args
@@ -251,6 +419,17 @@ def workflow_worker(args):
     )
 
     create_plots(mass_spec, workflow_params, dirloc)
+
+    ms_df = mass_spec.to_dataframe()
+    qc_fig, qc_axes = create_qc_figure(mass_spec, ms_df, title=mass_spec.sample_name,  hspace=0.25, wspace=0.35)
+
+    (dirloc / "qc_plots").mkdir(exist_ok=True, parents=True)
+
+    qc_fig.savefig(dirloc / "qc_plots" / "{}_qc.png".format(mass_spec.sample_name), dpi=100, bbox_inches='tight')
+    plt.close(qc_fig)
+    plt.close('all')
+
+
 
     return "Success" + str(os.getpid())
 

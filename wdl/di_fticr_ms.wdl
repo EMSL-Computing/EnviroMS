@@ -17,6 +17,7 @@ workflow fticrmsNOM {
         Array[File] dbe_vs_c_plots = runDirectInfusion.dbe_vs_c_plots
         Array[File] ms_class_plots = runDirectInfusion.ms_class_plots
         Array[File] mz_error_class_plots = runDirectInfusion.mz_error_class_plots
+        Array[File] qc_plots = runDirectInfusion.qc_plots
     }
 }
 
@@ -72,6 +73,7 @@ task runDirectInfusion {
         Array[File] dbe_vs_c_plots = glob('${output_directory}/**/dbe_vs_c/*.*')
         Array[File] ms_class_plots = glob('${output_directory}/**/ms_class/*.*')
         Array[File] mz_error_class_plots = glob('${output_directory}/**/mz_error_class/*.*')
+        Array[File] qc_plots = glob('${output_directory}/**/qc_plots/*.*')
     }
 
     runtime {
