@@ -83,22 +83,7 @@ def run_bruker_transient(file_location, corems_params_path):
     return mass_spectrum
 
 
-def get_masslist(file_location, corems_params_path, polarity, is_centroid):
-    print("get masslist")
-    if is_centroid:
-        reader = ReadMassList(file_location)
-    else:
-        reader = ReadMassList(
-            file_location, header_lines=7, isCentroid=False, isThermoProfile=True
-        )
-
-    reader.set_parameter_from_toml(parameters_path=corems_params_path)
-
-    return reader.get_mass_spectrum(polarity=polarity)
-
-
-def run_assignment(file_location, workflow_params):
-    print("run assignment")
+def read_fticr_raw_data(file_location, workflow_params):
     file_path = Path(file_location)
 
     if file_path.suffix == ".raw":
@@ -126,6 +111,26 @@ def run_assignment(file_location, workflow_params):
             polarity=workflow_params.polarity,
             is_centroid=workflow_params.is_centroid,
         )
+
+
+def get_masslist(file_location, corems_params_path, polarity, is_centroid):
+    print("get masslist")
+    if is_centroid:
+        reader = ReadMassList(file_location)
+    else:
+        reader = ReadMassList(
+            file_location, header_lines=7, isCentroid=False, isThermoProfile=True
+        )
+
+    reader.set_parameter_from_toml(parameters_path=corems_params_path)
+
+    return reader.get_mass_spectrum(polarity=polarity)
+
+
+def run_assignment(file_location, workflow_params):
+    print("run assignment")
+
+    mass_spectrum = read_fticr_raw_data(file_location, workflow_params)
 
     mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
 
@@ -230,9 +235,6 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
             ax_c = ms_by_classes.plot_dbe_vs_carbon_number(classe)
             plt.savefig(c_dbe_dirloc / "{}.png".format(classe), bbox_inches="tight")
             plt.clf()
-
-
-
 
 
 def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, ncols=4, hspace=0.22, wspace=0.22):
@@ -392,9 +394,6 @@ def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, nc
     
     print("made qc plots")
     return fig, axes
-
-
-
 
 
 def workflow_worker(args):
