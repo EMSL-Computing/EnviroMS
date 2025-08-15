@@ -338,7 +338,6 @@ def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, nc
     axes[3].set_xlabel('O/C')
     axes[3].set_xlim(0, 1.25)
     axes[3].set_ylim(0.25,2.25)
-    plt.show()
     
     #########
     # Heteroatom Countplot
