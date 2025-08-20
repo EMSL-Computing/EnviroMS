@@ -68,6 +68,7 @@ def run_thermo_reduce_profile(file_location, corems_params_path, first_scan, las
     from corems.mass_spectra.input import rawFileReader
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
+    parser.chromatogram_settings.scans = (first_scan, last_scan)
 
     mass_spectrum = parser.get_average_mass_spectrum()
     return mass_spectrum
@@ -88,12 +89,10 @@ def read_fticr_raw_data(file_location, workflow_params):
     file_path = Path(file_location)
 
     if file_path.suffix == ".raw":
-        first_scan, last_scan = (
-            workflow_params.raw_file_start_scan,
-            workflow_params.raw_file_final_scan,
-        )
         mass_spectrum = run_thermo_reduce_profile(
-            file_location, workflow_params, first_scan, last_scan
+            file_location, workflow_params, 
+            first_scan = workflow_params.raw_file_start_scan, 
+            last_scan = workflow_params.raw_file_final_scan
         )
 
     elif file_path.suffix == ".d":
