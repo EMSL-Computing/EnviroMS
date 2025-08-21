@@ -17,12 +17,12 @@
     "fticrmsNOM.runDirectInfusion.raw_file_start_scan": 1,
     "fticrmsNOM.runDirectInfusion.raw_file_final_scan": 7,
     
-    "fticrmsNOM.runDirectInfusion.plot_mz_error": true,
-    "fticrmsNOM.runDirectInfusion.plot_ms_assigned_unassigned": true,
-    "fticrmsNOM.runDirectInfusion.plot_c_dbe":  true,
-    "fticrmsNOM.runDirectInfusion.plot_van_krevelen": true,
-    "fticrmsNOM.runDirectInfusion.plot_ms_classes": true,
-    "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": true,
+    "fticrmsNOM.runDirectInfusion.plot_mz_error": false,
+    "fticrmsNOM.runDirectInfusion.plot_ms_assigned_unassigned": false,
+    "fticrmsNOM.runDirectInfusion.plot_c_dbe":  false,
+    "fticrmsNOM.runDirectInfusion.plot_van_krevelen": false,
+    "fticrmsNOM.runDirectInfusion.plot_ms_classes": false,
+    "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_qc": true
 
 

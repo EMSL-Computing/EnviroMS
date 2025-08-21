@@ -63,7 +63,7 @@ class DiWorkflowParameters:
         return toml.dumps(asdict(self))
 
 
-def run_thermo_reduce_profile(file_location, corems_params_path, first_scan, last_scan):
+def run_thermo_reduce_profile(file_location, first_scan, last_scan):
     print("run thermo reduce profile")
     from corems.mass_spectra.input import rawFileReader
 
@@ -85,12 +85,26 @@ def run_bruker_transient(file_location, corems_params_path):
     return mass_spectrum
 
 
+def get_masslist(file_location, corems_params_path, polarity, is_centroid):
+    print("get masslist")
+    if is_centroid:
+        reader = ReadMassList(file_location)
+    else:
+        reader = ReadMassList(
+            file_location, header_lines=7, isCentroid=False, isThermoProfile=True
+        )
+
+    reader.set_parameter_from_toml(parameters_path=corems_params_path)
+
+    return reader.get_mass_spectrum(polarity=polarity)
+
+    
 def read_fticr_raw_data(file_location, workflow_params):
     file_path = Path(file_location)
 
     if file_path.suffix == ".raw":
         mass_spectrum = run_thermo_reduce_profile(
-            file_location, workflow_params, 
+            file_location,
             first_scan = workflow_params.raw_file_start_scan, 
             last_scan = workflow_params.raw_file_final_scan
         )
@@ -115,35 +129,34 @@ def read_fticr_raw_data(file_location, workflow_params):
     return mass_spectrum
 
 
-def get_masslist(file_location, corems_params_path, polarity, is_centroid):
-    print("get masslist")
-    if is_centroid:
-        reader = ReadMassList(file_location)
-    else:
-        reader = ReadMassList(
-            file_location, header_lines=7, isCentroid=False, isThermoProfile=True
-        )
-
-    reader.set_parameter_from_toml(parameters_path=corems_params_path)
-
-    return reader.get_mass_spectrum(polarity=polarity)
-
-
 def run_assignment(file_location, workflow_params):
     print("run assignment")
 
+    # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(file_location, workflow_params)
 
+    # Check if the data is positive mode, if it is, no thank you!
+    if mass_spectrum.polarity > 0:
+        return "positive"
+
+    # Check if there is enough data
+    if len(mass_spectrum) < 30:
+        print("{}   {}".format("too few peaks", file_location))
+        return "too few peaks"
+
+    # Now that we have a mass spectrum, get settings from toml
     mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
 
+    # Calibrate (if specified)
     if workflow_params.calibrate:
         ref_file_location = Path(workflow_params.calibration_ref_file_path)
 
         MzDomainCalibration(mass_spectrum, ref_file_location).run()
 
-    # force it to one job. daemon child can not have child process
+    # Force it to one job. daemon child can not have child process
     mass_spectrum.molecular_search_settings.db_jobs = 1
 
+    # Finally, identify the molecular formulae!
     SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
     return mass_spectrum
@@ -168,7 +181,7 @@ def generate_database(corems_parameters_file, jobs):
 
 
 def read_workflow_parameter(di_workflow_parameters_toml_file):
-    print("read workflow parameter")
+    # read workflow parameter for non wdl run
     with open(di_workflow_parameters_toml_file, "r") as infile:
         return DiWorkflowParameters(**toml.load(infile))
 
@@ -417,6 +430,11 @@ def workflow_worker(args):
 
     mass_spec = run_assignment(file_location, workflow_params)
 
+    # If run_assignment caught an issue
+    if type(mass_spec) == str:
+        print(mass_spec+"   "+file_location)
+        return mass_spec
+
     dirloc = Path(workflow_params.output_directory) / mass_spec.sample_name
 
     dirloc.mkdir(exist_ok=True, parents=True)
@@ -434,7 +452,6 @@ def workflow_worker(args):
     return "Success" + str(os.getpid())
 
 
-# Resource profiling. not used.
 def cprofile_worker(file_location, workflow_params_toml_str):
     cProfile.runctx(
         "run_assignment(file_location, workflow_params)",
@@ -454,23 +471,6 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
 
     workflow_params = DiWorkflowParameters(**kwargs)
     workflow_params.file_paths = workflow_params.file_paths.split(",")
-    # workflow_params.output_directory = kwargs.get['output_directory']
-    # workflow_params.output_type = kwargs.get['output_type']
-    # workflow_params.corems_toml_path = kwargs.get['corems_toml_path']
-    # workflow_params.polarity = -1 if kwargs.get['polarity'] == 'negative' else 1
-    # workflow_params.raw_file_start_scan = kwargs.get['raw_file_start_scan']
-    # workflow_params.raw_file_final_scan = kwargs.get['raw_file_final_scan']
-    # workflow_params.is_centroid = kwargs.get['is_centroid']
-    # workflow_params.calibration_ref_file_path = kwargs.get['calibration_ref_file_path']
-
-    # workflow_params.calibrate = kwargs.get['calibrate']
-    # workflow_params.calibrate = kwargs.get['plot_mz_error']
-    # workflow_params.calibrate = kwargs.get['plot_ms_assigned_unassigned']
-    # workflow_params.calibrate = kwargs.get['plot_c_dbe']
-    # workflow_params.calibrate = kwargs.get['plot_van_krevelen']
-    # workflow_params.calibrate = kwargs.get['plot_ms_classes']
-    # workflow_params.calibrate = kwargs.get['plot_mz_error_classes']
-    # workflow_params.calibrate = kwargs.get['calibrate']
 
     dirloc = Path(workflow_params.output_directory)
     dirloc.mkdir(exist_ok=True)
