@@ -129,26 +129,22 @@ def read_fticr_raw_data(file_location, workflow_params):
     return mass_spectrum
 
 
-def run_assignment(file_location, workflow_params):
+def run_assignment(file_location, workflow_params, error_boundaries):
     print("run assignment")
 
     # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(file_location, workflow_params)
-
-    # Check if the data is positive mode, if it is, no thank you!
-    if mass_spectrum.polarity > 0:
-        return "positive"
-
-    # Check if there is enough data
-    if len(mass_spectrum) < 30:
-        print("{}   {}".format("too few peaks", file_location))
-        return "too few peaks"
 
     # Now that we have a mass spectrum, get settings from toml
     mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
 
     # Calibrate (if specified)
     if workflow_params.calibrate:
+
+        # Overwrite the min and max error tolerances with the values from calibration
+        mass_spectrum.max_calib_ppm_error = max(error_boundaries[-1])
+        mass_spectrum.min_calib_ppm_error = min(error_boundaries[-1])
+
         ref_file_location = Path(workflow_params.calibration_ref_file_path)
 
         MzDomainCalibration(mass_spectrum, ref_file_location).run()
@@ -430,11 +426,6 @@ def workflow_worker(args):
 
     mass_spec = run_assignment(file_location, workflow_params)
 
-    # If run_assignment caught an issue
-    if type(mass_spec) == str:
-        print(mass_spec+"   "+file_location)
-        return mass_spec
-
     dirloc = Path(workflow_params.output_directory) / mass_spec.sample_name
 
     dirloc.mkdir(exist_ok=True, parents=True)
@@ -463,6 +454,21 @@ def cprofile_worker(file_location, workflow_params_toml_str):
     # stats.strip_dirs().sort_stats("time").print_stats()
 
 
+def find_calibration_for_batch(srfa_path, workflow_params):
+    # Does not support positive mode data.
+
+    # Determine data file type and read in the mass spectrum
+    mass_spectrum = read_fticr_raw_data(srfa_path, workflow_params)
+
+    # Now that we have a mass spectrum, get settings from toml
+    mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
+
+    # Get calibration error bounds based on standard (usually SRFA)
+    error_boundaries = HighResRecalibration(mass_spectrum,plot=True).determine_error_boundaries()
+
+    return error_boundaries
+
+
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
     print("run wdl direct infusion workflow")
     cores = kwargs.get("jobs")
@@ -472,6 +478,24 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
     workflow_params = DiWorkflowParameters(**kwargs)
     workflow_params.file_paths = workflow_params.file_paths.split(",")
 
+    # Before getting to the real samples, deal with SRFA
+    
+    # get file paths from the list that have SRFA in the name
+
+    srfa_path = workflow_params.file_paths
+
+    if len(srfa_path) > 1:
+        print("Multiple SRFA files, using the first one. Choose one SRFA calibration per batch if you don't want this to happen.")
+        srfa_path = srfa_path[0]
+
+    error_boundaries = find_calibration_for_batch(srfa_path)
+
+    # Remove the SRFA file you used from the file list so it's not in the output
+    # workflow_params.file_paths = workflow_params.file_paths.remove(srfa_path)
+    
+    # Now proceed with analyzing the rest of the files
+
+    # Create output directory
     dirloc = Path(workflow_params.output_directory)
     dirloc.mkdir(exist_ok=True)
 
@@ -482,14 +506,15 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
         for file_path in workflow_params.file_paths
     ]
     file_path = Path(worker_args[0][0])
-    print(file_path)
+
+    # Run workflow for every file in the list
     for worker_arg in worker_args:
        workflow_worker(worker_arg)
 
     # multithreading doesn't work for some reason
     # for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
     #     pass
-    print("hellooooo")
+
     pool.close()
     pool.join()
 
