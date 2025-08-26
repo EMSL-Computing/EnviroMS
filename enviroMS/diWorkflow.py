@@ -463,8 +463,19 @@ def cprofile_worker(file_location, workflow_params_toml_str):
     # stats.strip_dirs().sort_stats("time").print_stats()
 
 
-def find_calibration_for_batch(srfa_path, workflow_params):
+def find_calibration_for_batch(workflow_params):
     # Does not support positive mode data.
+
+    # Get file paths that have SRFA in the name
+    srfa_path = list(filter(lambda x: "SRFA" in x, workflow_params.file_paths))
+
+    if len(srfa_path) > 1:
+        print("Multiple SRFA files, using the first one. Include only one SRFA file per batch if you don't want this to happen.")
+    
+    srfa_path = srfa_path[0]
+
+    # Remove the SRFA file you used from the file list so it's not in the output
+    workflow_params.file_paths.remove(srfa_path)
 
     # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(srfa_path, workflow_params)
@@ -501,7 +512,7 @@ def find_calibration_for_batch(srfa_path, workflow_params):
     q = quantiles(mz_error, n = 20)
     search_error_boundaries = (q[0], q[18])
 
-    return (calib_error_boundaries, search_error_boundaries)
+    return (calib_error_boundaries, search_error_boundaries), workflow_params.file_paths
 
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
@@ -512,51 +523,28 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
 
     workflow_params = DiWorkflowParameters(**kwargs)
 
-    # if "*" in workflow_params.file_paths:
-    #     p = Path(workflow_params.file_paths)
-    #     workflow_params.file_paths = Path(p.parent).expanduser().glob(p.name)
-
     workflow_params.file_paths = workflow_params.file_paths.split(",")
 
     if workflow_params.batch_calibrate:
         # Before processing the samples, set calibration based on SRFA
-        # Get file paths that have SRFA in the name
-        srfa_path = list(filter(lambda x: "SRFA" in x, workflow_params.file_paths))
-
-        if len(srfa_path) > 1:
-            print("Multiple SRFA files, using the first one. Include only one SRFA file per batch if you don't want this to happen.")
-        
-        srfa_path = srfa_path[0]
-        error_boundaries = find_calibration_for_batch(srfa_path, workflow_params)
-
-        # Remove the SRFA file you used from the file list so it's not in the output
-        workflow_params.file_paths.remove(srfa_path)
-        # Now proceed with analyzing the rest of the files
+        error_boundaries, workflow_params.file_paths = find_calibration_for_batch(workflow_params)
     else:
-        error_boundaries = () # won't be used if not batch calibrating, but need something for function input
+        # Not used if not batch_calibrate, placeholder for run_assignment input
+        error_boundaries = ()
 
     # Create output directory
     dirloc = Path(workflow_params.output_directory)
     dirloc.mkdir(exist_ok=True)
 
-    pool = Pool(cores)
-
+    # Run workflow for every file in the list
     worker_args = [
         (file_path, workflow_params.to_toml(), error_boundaries)
         for file_path in workflow_params.file_paths
     ]
     file_path = Path(worker_args[0][0])
 
-    # Run workflow for every file in the list
     for worker_arg in worker_args:
        workflow_worker(worker_arg)
-
-    # multithreading doesn't work for some reason
-    # for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
-    #     pass
-
-    pool.close()
-    pool.join()
 
 
 def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
