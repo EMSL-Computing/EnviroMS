@@ -20,6 +20,7 @@ from corems.molecular_id.factory.MolecularLookupTable import MolecularCombinatio
 from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
+from corems.encapsulation.output import parameter_to_dict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from tqdm import tqdm
@@ -145,8 +146,8 @@ def run_assignment(file_location, workflow_params, error_boundaries):
 
         if workflow_params.batch_calibrate:
             # Overwrite the min and max error tolerances with the values from calibration
-            mass_spectrum.max_calib_ppm_error = max(error_boundaries[-1])
-            mass_spectrum.min_calib_ppm_error = min(error_boundaries[-1])
+            mass_spectrum.settings.max_calib_ppm_error = max(error_boundaries[-1])
+            mass_spectrum.settings.min_calib_ppm_error = min(error_boundaries[-1])
 
         ref_file_location = Path(workflow_params.calibration_ref_file_path)
 
@@ -430,12 +431,9 @@ def workflow_worker(args):
     mass_spec = run_assignment(file_location, workflow_params, error_boundaries)
 
     dirloc = Path(workflow_params.output_directory) / mass_spec.sample_name
-
     dirloc.mkdir(exist_ok=True, parents=True)
-
     output_path = dirloc / mass_spec.sample_name
 
-    print(mass_spec.max_calib_ppm_error, mass_spec.min_calib_ppm_error)
     eval(
         "mass_spec.to_{OUT_TYPE}(output_path)".format(
             OUT_TYPE=workflow_params.output_type
