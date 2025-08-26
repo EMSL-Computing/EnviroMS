@@ -121,6 +121,7 @@ def create_database(corems_parameters_file, jobs):
 @click.argument("is_centroid", required=True, type=bool)
 @click.argument("calibration_ref_file_path", required=False, type=str)
 @click.option("--calibrate", "-c", default=True, help="Calibrate the raw files")
+@click.option("--batch-calibrate", "-bc", default=True, help="Use settings based on a SRFA reference file to calibrate the raw files")
 @click.option("--plot_mz_error", "-e", default=True, help="Plot m/z error")
 @click.option("--plot_ms_assigned_unassigned", "-a", default=True, help="Plot MS assigned and unassigned")
 @click.option("--plot_c_dbe", "-cb", default=True, help="Plot C vs DBE")
@@ -129,7 +130,6 @@ def create_database(corems_parameters_file, jobs):
 @click.option("--plot_mz_error_classes", "-ec", default=True, help="Plot m/z error classes")
 @click.option("--plot_qc", "-qc", default=True)
 @click.option("--jobs", "-j", default=4, help="'cpu's'")
->>>>>>> enviroMS/cli.py
 def run_di_wdl(*args, **kwargs):
     """Run the Direct Infusion Workflow using wdl"""
 
@@ -159,12 +159,6 @@ def run_di(di_workflow_parameters_file, jobs, replicas, tasks, mpi):
 
 
 @cli.command(name="run_lc_fticr")
-<<<<<<< enviroMS/cli.py
-@click.argument("lc_fticr_workflow_parameters_file", required=True, type=str)
-def run_lc_fticr(lc_fticr_workflow_parameters_file):
-    """Run the LC-FTICR workflow"""
-    run_LC_FTICR_workflow(lc_fticr_workflow_parameters_file)
-=======
 @click.argument("lc_fticr_workflow_paramaters_file", required=True, type=str)
 def run_lc_fticr(lc_fticr_workflow_paramaters_file):
     """Run the LC FTICR MS workflow.
@@ -176,7 +170,6 @@ def run_lc_fticr(lc_fticr_workflow_paramaters_file):
     """
 
     run_LC_FTICR_workflow(lc_fticr_workflow_paramaters_file)
->>>>>>> enviroMS/cli.py
 
 
 @cli.command(name="run_lc_fticr_wdl")

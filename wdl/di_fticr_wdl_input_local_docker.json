@@ -2,12 +2,14 @@
     "fticrmsNOM.docker_image": "local-enviroms:latest",
     
     "fticrmsNOM.runDirectInfusion.file_paths": [
-        "./data/raw_data/SRFA_40ppm_NegativeESI_21T.raw"
+        "data/raw_data/SRFA_40ppm_NegativeESI_21T.raw",
+        "data/raw_data/example_data/Brodie_151_w_r2_29Jan19_HESI_neg.raw"
     ],
 
     "fticrmsNOM.runDirectInfusion.output_directory": "output",
     "fticrmsNOM.runDirectInfusion.output_type": "csv",
     "fticrmsNOM.runDirectInfusion.calibrate": true,
+    "fticrmsNOM.runDirectInfusion.batch_calibrate": true,
     "fticrmsNOM.runDirectInfusion.calibration_ref_file_path": "./data/reference/SRFA.ref",
     
     "fticrmsNOM.runDirectInfusion.corems_toml_path": "./configuration/di_corems.toml",

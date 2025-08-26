@@ -33,6 +33,7 @@ task runDirectInfusion {
         Boolean is_centroid
         File calibration_ref_file_path
         Boolean calibrate
+        Boolean batch_calibrate
         Boolean plot_mz_error
         Boolean plot_ms_assigned_unassigned
         Boolean plot_c_dbe
@@ -56,6 +57,7 @@ task runDirectInfusion {
             ${is_centroid} \
             ${calibration_ref_file_path} \
             -c ${calibrate} \
+            -bc ${batch_calibrate} \
             -e ${plot_mz_error} \
             -a ${plot_ms_assigned_unassigned} \
             -cb ${plot_c_dbe} \

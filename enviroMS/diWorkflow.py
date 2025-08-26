@@ -13,6 +13,7 @@ from corems.encapsulation.input.parameter_from_json import (
     load_and_set_toml_parameters_class,
 )
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
+from corems.mass_spectrum.calc.AutoRecalibration import HighResRecalibration
 from corems.mass_spectrum.input.massList import ReadMassList
 from corems.molecular_id.factory.classification import HeteroatomsClassification
 from corems.molecular_id.factory.MolecularLookupTable import MolecularCombinations
@@ -47,6 +48,7 @@ class DiWorkflowParameters:
     corems_toml_path: str = "configuration/di_corems.toml"
     # calibration
     calibrate: bool = True
+    batch_calibrate: bool = True
     calibration_ref_file_path: str = "data/raw_data/SRFA.ref"
 
     # plots
@@ -141,9 +143,10 @@ def run_assignment(file_location, workflow_params, error_boundaries):
     # Calibrate (if specified)
     if workflow_params.calibrate:
 
-        # Overwrite the min and max error tolerances with the values from calibration
-        mass_spectrum.max_calib_ppm_error = max(error_boundaries[-1])
-        mass_spectrum.min_calib_ppm_error = min(error_boundaries[-1])
+        if workflow_params.batch_calibrate:
+            # Overwrite the min and max error tolerances with the values from calibration
+            mass_spectrum.max_calib_ppm_error = max(error_boundaries[-1])
+            mass_spectrum.min_calib_ppm_error = min(error_boundaries[-1])
 
         ref_file_location = Path(workflow_params.calibration_ref_file_path)
 
@@ -420,11 +423,11 @@ def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, nc
 
 def workflow_worker(args):
     print("workflow worker")
-    file_location, workflow_params_toml_str = args
+    file_location, workflow_params_toml_str, error_boundaries = args
 
     workflow_params = DiWorkflowParameters(**toml.loads(workflow_params_toml_str))
 
-    mass_spec = run_assignment(file_location, workflow_params)
+    mass_spec = run_assignment(file_location, workflow_params, error_boundaries)
 
     dirloc = Path(workflow_params.output_directory) / mass_spec.sample_name
 
@@ -432,6 +435,7 @@ def workflow_worker(args):
 
     output_path = dirloc / mass_spec.sample_name
 
+    print(mass_spec.max_calib_ppm_error, mass_spec.min_calib_ppm_error)
     eval(
         "mass_spec.to_{OUT_TYPE}(output_path)".format(
             OUT_TYPE=workflow_params.output_type
@@ -464,7 +468,7 @@ def find_calibration_for_batch(srfa_path, workflow_params):
     mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
 
     # Get calibration error bounds based on standard (usually SRFA)
-    error_boundaries = HighResRecalibration(mass_spectrum,plot=True).determine_error_boundaries()
+    error_boundaries = HighResRecalibration(mass_spectrum, plot=True, docker = False).determine_error_boundaries()
 
     return error_boundaries
 
@@ -476,24 +480,27 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
     kwargs["polarity"] = -1 if kwargs.get("polarity") == "negative" else 1
 
     workflow_params = DiWorkflowParameters(**kwargs)
+
+    # if "*" in workflow_params.file_paths:
+    #     p = Path(workflow_params.file_paths)
+    #     workflow_params.file_paths = Path(p.parent).expanduser().glob(p.name)
+
     workflow_params.file_paths = workflow_params.file_paths.split(",")
 
-    # Before getting to the real samples, deal with SRFA
-    
-    # get file paths from the list that have SRFA in the name
+    if workflow_params.batch_calibrate:
+        # Before processing the samples, set calibration based on SRFA
+        # Get file paths that have SRFA in the name
+        srfa_path = list(filter(lambda x: "SRFA" in x, workflow_params.file_paths))
 
-    srfa_path = workflow_params.file_paths
-
-    if len(srfa_path) > 1:
-        print("Multiple SRFA files, using the first one. Choose one SRFA calibration per batch if you don't want this to happen.")
+        if len(srfa_path) > 1:
+            print("Multiple SRFA files, using the first one. Include only one SRFA file per batch if you don't want this to happen.")
+        
         srfa_path = srfa_path[0]
+        error_boundaries = find_calibration_for_batch(srfa_path, workflow_params)
 
-    error_boundaries = find_calibration_for_batch(srfa_path)
-
-    # Remove the SRFA file you used from the file list so it's not in the output
-    # workflow_params.file_paths = workflow_params.file_paths.remove(srfa_path)
-    
-    # Now proceed with analyzing the rest of the files
+        # Remove the SRFA file you used from the file list so it's not in the output
+        workflow_params.file_paths.remove(srfa_path)
+        # Now proceed with analyzing the rest of the files
 
     # Create output directory
     dirloc = Path(workflow_params.output_directory)
@@ -502,7 +509,7 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
     pool = Pool(cores)
 
     worker_args = [
-        (file_path, workflow_params.to_toml())
+        (file_path, workflow_params.to_toml(), error_boundaries)
         for file_path in workflow_params.file_paths
     ]
     file_path = Path(worker_args[0][0])
