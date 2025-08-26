@@ -24,6 +24,7 @@ from corems.encapsulation.output import parameter_to_dict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from tqdm import tqdm
+from statistics import quantiles
 import pandas as pd
 import seaborn as sns
 
@@ -145,10 +146,16 @@ def run_assignment(file_location, workflow_params, error_boundaries):
     if workflow_params.calibrate:
 
         if workflow_params.batch_calibrate:
-            # Overwrite the min and max error tolerances with the values from calibration
-            mass_spectrum.settings.max_calib_ppm_error = max(error_boundaries[-1])
-            mass_spectrum.settings.min_calib_ppm_error = min(error_boundaries[-1])
+            # Split out error settings
+            calib_error_boundaries, search_error_boundaries = error_boundaries
 
+            # Overwrite the min and max error tolerances with the values from calibration
+            mass_spectrum.settings.max_calib_ppm_error = max(calib_error_boundaries)
+            mass_spectrum.settings.min_calib_ppm_error = min(calib_error_boundaries)
+            mass_spectrum.molecular_search_settings.max_ppm_error = max(search_error_boundaries)
+            mass_spectrum.molecular_search_settings.min_ppm_error = min(search_error_boundaries)
+
+        # Otherwise, calibrate using settings in file
         ref_file_location = Path(workflow_params.calibration_ref_file_path)
 
         MzDomainCalibration(mass_spectrum, ref_file_location).run()
@@ -466,9 +473,35 @@ def find_calibration_for_batch(srfa_path, workflow_params):
     mass_spectrum.set_parameter_from_toml(workflow_params.corems_toml_path)
 
     # Get calibration error bounds based on standard (usually SRFA)
-    error_boundaries = HighResRecalibration(mass_spectrum, plot=True, docker = False).determine_error_boundaries()
+    calib_error_boundaries = HighResRecalibration(mass_spectrum, plot=True, docker = False).determine_error_boundaries()[2]
 
-    return error_boundaries
+    # Overwrite the min and max error tolerances with the values from calibration
+    mass_spectrum.settings.max_calib_ppm_error = max(calib_error_boundaries)
+    mass_spectrum.settings.min_calib_ppm_error = min(calib_error_boundaries)
+
+    # Use new settings to calibrate
+    ref_file_location = Path(workflow_params.calibration_ref_file_path)
+    MzDomainCalibration(mass_spectrum, ref_file_location).run()
+
+    # Force it to one job. daemon child can not have child process
+    mass_spectrum.molecular_search_settings.db_jobs = 1
+
+    # Identify molecular formulae
+    SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+
+    # Extract the error distribution from the Heteroatoms class that makes error plots
+    mass_spectrum_by_classes = HeteroatomsClassification(
+        mass_spectrum, choose_molecular_formula=False
+    )
+    mass_spectrum_by_classes.plot_mz_error()
+    mz_error = mass_spectrum_by_classes.mz_error_all()
+
+    # Get 5th and 95th percentile of error to use as search error max/min
+    # i.e. retain the middle 90% (vertically) of the points on the error plot
+    q = quantiles(mz_error, n = 20)
+    search_error_boundaries = (q[0], q[18])
+
+    return (calib_error_boundaries, search_error_boundaries)
 
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
@@ -499,6 +532,8 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
         # Remove the SRFA file you used from the file list so it's not in the output
         workflow_params.file_paths.remove(srfa_path)
         # Now proceed with analyzing the rest of the files
+    else:
+        error_boundaries = () # won't be used if not batch calibrating, but need something for function input
 
     # Create output directory
     dirloc = Path(workflow_params.output_directory)
