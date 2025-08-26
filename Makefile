@@ -91,6 +91,9 @@ cascade-run:
 
 	srun -A mscms -t 240 -N 1 -n time enviroMS run-di -r 2 --mpi  /dtemp/mscms/enviroms/data/configuration/enviroms.toml
 
+cli-run-di :
+	enviroMS run_di configuration/di_enviroms.toml --jobs 1 --replicas 1 --tasks 1
+
 wdl-run-di :
  	 
 	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files

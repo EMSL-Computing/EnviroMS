@@ -42,3 +42,6 @@ share/python-wheels/
 *.raw
 *.d
 data/raw_data/example_data/
+
+# Processed data
+output

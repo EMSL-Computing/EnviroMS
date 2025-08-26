@@ -21,6 +21,7 @@ from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFor
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from corems.encapsulation.output import parameter_to_dict
+import matplotlib as mpl 
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from tqdm import tqdm
@@ -195,6 +196,9 @@ def read_workflow_parameter(di_workflow_parameters_toml_file):
 
 def create_plots(mass_spectrum, workflow_params, dirloc):
     print("create plots")
+    # Prevent overflow error when plotting
+    mpl.rcParams['agg.path.chunksize'] = 10000 
+    
     ms_by_classes = HeteroatomsClassification(
         mass_spectrum, choose_molecular_formula=False
     )
@@ -517,8 +521,7 @@ def find_calibration_for_batch(workflow_params):
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
     print("run wdl direct infusion workflow")
-    cores = kwargs.get("jobs")
-    del kwargs["jobs"]
+
     kwargs["polarity"] = -1 if kwargs.get("polarity") == "negative" else 1
 
     workflow_params = DiWorkflowParameters(**kwargs)
@@ -553,26 +556,45 @@ def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
     click.echo("Loading Searching Settings from %s" % workflow_params_file)
     workflow_params = read_workflow_parameter(workflow_params_file)
 
-    # Set up paths
+    # File paths need to be a list of strings. If you gave it one string...
+    if isinstance(workflow_params.file_paths, str):
+        # If it has a wildcard, get a list of files in the directory
+        if "*" in workflow_params.file_paths:
+            p = Path(workflow_params.file_paths)
+            workflow_params.file_paths = list(Path(p.parent).glob(p.name))
+            workflow_params.file_paths = list(map(str, workflow_params.file_paths))
+        # If no wildcard (single filepath), cast to list to match types later
+        else:
+            workflow_params.file_paths = list(workflow_params.file_paths)
+
+    # Set up output paths
     dirloc = Path(workflow_params.output_directory)
     dirloc.mkdir(exist_ok=True)
 
+    if workflow_params.batch_calibrate:
+        # Before processing the samples, set calibration based on SRFA
+        error_boundaries, workflow_params.file_paths = find_calibration_for_batch(workflow_params)
+    else:
+        # Not used if not batch_calibrate, placeholder for run_assignment input
+        error_boundaries = ()
+
     worker_args = replicas * [
-        (file_path, workflow_params.to_toml())
+        (file_path, workflow_params.to_toml(), error_boundaries)
         for file_path in workflow_params.file_paths
     ]
 
-    cores = jobs
-    pool = Pool(cores)
+    # cores = jobs
+    # pool = Pool(cores)
 
     for worker_arg in worker_args:
+        print(worker_arg[0])
         workflow_worker(worker_arg)
-    # for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
 
+    # for i, results in enumerate(pool.imap_unordered(workflow_worker, worker_args), 1):
     #    pass
 
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
 
 
 def run_di_mpi(workflow_params_file, tasks, replicas):
