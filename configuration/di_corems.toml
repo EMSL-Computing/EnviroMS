@@ -77,14 +77,17 @@ implemented_kendrick_rounding_methods = [ "floor", "ceil", "round",]
 peak_derivative_threshold = 0.0
 peak_min_prominence_percent = 0.1
 min_peak_datapoints = 5.0
-peak_max_prominence_percent = 0.1
+peak_max_prominence_percent = 1
 peak_height_max_percent = 10.0
 legacy_resolving_power = true
 centroid_legacy_polyfit = false
 
 [MolecularFormulaSearch.usedAtoms]
 C = [ 1, 100,]
-H = [ 1, 200,]
+H = [ 4, 200,]
+O = [ 0, 22,]
+N = [ 0, 1,]
+S = [ 0, 1,]
 
 [MolecularFormulaSearch.used_atom_valences]
 C = 4

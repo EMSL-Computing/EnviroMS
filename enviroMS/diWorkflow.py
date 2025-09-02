@@ -22,6 +22,7 @@ from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignme
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from corems.encapsulation.output import parameter_to_dict
 import matplotlib as mpl 
+mpl.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from tqdm import tqdm
@@ -268,11 +269,14 @@ def create_plots(mass_spectrum, workflow_params, dirloc):
     
     # Create QC plots
     if workflow_params.plot_qc:
-        ms_df = mass_spectrum.to_dataframe()
-        qc_fig, qc_axes = create_qc_figure(mass_spectrum, ms_df, title=mass_spectrum.sample_name,  hspace=0.25, wspace=0.35)
-        qc_fig.savefig(qc_plot_dirloc / "{}_qc.png".format(mass_spectrum.sample_name), dpi=100, bbox_inches='tight')
-        plt.close(qc_fig)
-        plt.close('all')
+        if workflow_params.calibrate:
+            ms_df = mass_spectrum.to_dataframe()
+            qc_fig, qc_axes = create_qc_figure(mass_spectrum, ms_df, title=mass_spectrum.sample_name,  hspace=0.25, wspace=0.35)
+            qc_fig.savefig(qc_plot_dirloc / "{}_qc.png".format(mass_spectrum.sample_name), dpi=100, bbox_inches='tight')
+            plt.close(qc_fig)
+            plt.close('all')
+        else:
+            "QC plots rely on calibrated data, either enable calibration or disable QC plotting"
 
 
 def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, ncols=4, hspace=0.22, wspace=0.22):
@@ -479,7 +483,7 @@ def find_calibration_for_batch(workflow_params):
     srfa_path = srfa_path[0]
 
     # Remove the SRFA file you used from the file list so it's not in the output
-    workflow_params.file_paths.remove(srfa_path)
+    #workflow_params.file_paths.remove(srfa_path)
 
     # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(srfa_path, workflow_params)
@@ -508,7 +512,10 @@ def find_calibration_for_batch(workflow_params):
     mass_spectrum_by_classes = HeteroatomsClassification(
         mass_spectrum, choose_molecular_formula=False
     )
-    mass_spectrum_by_classes.plot_mz_error()
+    mzplot = mass_spectrum_by_classes.plot_mz_error()
+    # scatter_plot = mzplot.collections[0]
+    # scatter_plot.set_sizes([1])
+    # plt.show()
     mz_error = mass_spectrum_by_classes.mz_error_all()
 
     # Get 5th and 95th percentile of error to use as search error max/min
