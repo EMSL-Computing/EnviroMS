@@ -72,8 +72,7 @@ docker-build:
 
 docker-build-local:
 
-	docker build -t local-enviroms:$(version) .
-
+	docker build --pull --no-cache -t local-enviroms:latest .
 
 docker-run-di:
 
@@ -91,13 +90,24 @@ cascade-run:
 
 	srun -A mscms -t 240 -N 1 -n time enviroMS run-di -r 2 --mpi  /dtemp/mscms/enviroms/data/configuration/enviroms.toml
 
+cli-run-di :
+	enviroMS run_di configuration/di_enviroms.toml --jobs 1 --replicas 1 --tasks 1
+
 wdl-run-di :
  	 
 	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
 
+wdl-run-di-local :
+	@make docker-build-local
+	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
+
 wdl-run-lc :
  	 
 	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+
+wdl-run-lc-local:
+
+	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
 get-lcms-fticr-test-data:
 
@@ -132,6 +142,4 @@ get-lcms-fticr-test-data:
 	else echo "Reference file exists"; fi
 	@echo "LC-MS FT-ICR test files complete"
 
-wdl-run-lc-local:
 
-	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files

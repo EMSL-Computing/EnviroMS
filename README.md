@@ -199,7 +199,7 @@ A docker image containing the EnviroMS command line as code entry-point
 - Run Workflow from Container:
 
     $(data_dir) = dir_containing the FT-ICR MS data
-    $(configuration_dir) = dir_containing the enviroms.toml, corems.toml and nmdc_metadata.json
+    $(configuration_dir) = dir_containing the enviroms.toml and corems.toml
     
     ```bash
     docker run -v $(data_dir):/enviroms/data \

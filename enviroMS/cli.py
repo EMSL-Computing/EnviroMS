@@ -115,19 +115,20 @@ def create_database(corems_parameters_file, jobs):
 @click.argument("output_directory", required=True, type=str)
 @click.argument("output_type", required=True, type=str)
 @click.argument("corems_toml_path", required=True, type=str)
-@click.argument("nmdc_metadata_path", required=True, type=str)
 @click.argument("polarity", required=True, type=str)
 @click.argument("raw_file_start_scan", required=True, type=int)
 @click.argument("raw_file_final_scan", required=True, type=int)
 @click.argument("is_centroid", required=True, type=bool)
 @click.argument("calibration_ref_file_path", required=False, type=str)
 @click.option("--calibrate", "-c", default=True, help="Calibrate the raw files")
+@click.option("--batch-calibrate", "-bc", default=True, help="Use settings based on a SRFA reference file to calibrate the raw files")
 @click.option("--plot_mz_error", "-e", default=True, help="Plot m/z error")
 @click.option("--plot_ms_assigned_unassigned", "-a", default=True, help="Plot MS assigned and unassigned")
 @click.option("--plot_c_dbe", "-cb", default=True, help="Plot C vs DBE")
 @click.option("--plot_van_krevelen", "-vk", default=True, help="Plot Van Krevelen diagram")
 @click.option("--plot_ms_classes", "-mc", default=True, help="Plot MS classes")
 @click.option("--plot_mz_error_classes", "-ec", default=True, help="Plot m/z error classes")
+@click.option("--plot_qc", "-qc", default=True)
 @click.option("--jobs", "-j", default=4, help="'cpu's'")
 def run_di_wdl(*args, **kwargs):
     """Run the Direct Infusion Workflow using wdl"""
@@ -136,24 +137,24 @@ def run_di_wdl(*args, **kwargs):
 
 
 @cli.command(name="run_di")
-@click.argument("di_workflow_paramaters_file", required=True, type=str)
+@click.argument("di_workflow_parameters_file", required=True, type=str)
 @click.option("--jobs", "-j", default=4, help="'cpu's'")
 @click.option("--replicas", "-r", default=1, help="data replicas")
 @click.option("--tasks", "-t", default=4, help="mpi tasks")
 @click.option("--mpi", "-m", is_flag=True, help="run mpi version")
-def run_di(di_workflow_paramaters_file, jobs, replicas, tasks, mpi):
+def run_di(di_workflow_parameters_file, jobs, replicas, tasks, mpi):
     """Run the Direct Infusion Workflow\n
-    workflow_paramaters_file = toml file with workflow parameters\n
+    workflow_parameters_file = toml file with workflow parameters\n
     output_types = csv, excel, pandas, json set on the parameter file\n
     corems_toml_path = toml file with corems parameters\n
     --jobs = number of processes to run in parallel\n
     --mpi = run on hpc, if omitted will run python's multiprocessing and will duplicate runs on nodes\n
     """
     if mpi:
-        run_di_mpi(di_workflow_paramaters_file, tasks, replicas)
+        run_di_mpi(di_workflow_parameters_file, tasks, replicas)
 
     else:
-        run_direct_infusion_workflow(di_workflow_paramaters_file, jobs, replicas)
+        run_direct_infusion_workflow(di_workflow_parameters_file, jobs, replicas)
 
 
 
