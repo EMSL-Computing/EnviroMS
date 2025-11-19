@@ -1,8 +1,8 @@
 app_name = enviroms
 parameters_path = data/enviroms.toml
 # change the path to your data path /Users/eber373/Desenvolvimento/enviroms
-data_dir = /Users/eber373/Development/enviroms/data
-configuration_dir = /Users/eber373/Development/enviroms/configuration
+data_dir = /home/bmeluch/enviroMS_work/reprocessing/spruce/batch1
+configuration_dir = /home/bmeluch/enviroMS_work/enviroms/configuration
 version := $(shell cat .bumpversion.cfg | grep current_version | cut -d= -f2 | tr -d ' ')
 stage := $(shell cat .bumpversion.cfg | grep optional_value | cut -d= -f2 | tr -d ' ') 
 
@@ -78,7 +78,14 @@ docker-run-di:
 
 	@echo $(data_dir)
 	@echo $(configuration_dir)
-	docker run -v $(data_dir):/enviroms/data -v $(configuration_dir):/enviroms/configuration microbiomedata/enviroms:$(version) run-di /enviroms/configuration/enviroms.toml
+	docker run -v $(data_dir):/enviroms/data -v $(configuration_dir):/enviroms/configuration microbiomedata/enviroms:$(version) run_di /enviroms/configuration/di_enviroms.toml
+
+docker-run-di-local:
+
+	@make docker-build-local
+	@echo $(data_dir)
+	@echo $(configuration_dir)
+	docker run -v $(data_dir):/enviroms/data/raw_data -v ./data/reference:/enviroms/data/reference -v $(configuration_dir):/enviroms/configuration local-enviroms:latest enviroMS run_di /enviroms/configuration/di_enviroms.toml
 
 docker-run-lc:
 

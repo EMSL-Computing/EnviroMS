@@ -26,7 +26,4 @@
     "fticrmsNOM.runDirectInfusion.plot_ms_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_qc": true
-
-
 }
-

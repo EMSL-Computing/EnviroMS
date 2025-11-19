@@ -22,7 +22,7 @@ from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignme
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from corems.encapsulation.output import parameter_to_dict
 import matplotlib as mpl 
-mpl.use("TkAgg")
+#mpl.use("TkAgg")
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gridspec
 from tqdm import tqdm
@@ -512,7 +512,9 @@ def find_calibration_for_batch(workflow_params):
     mass_spectrum_by_classes = HeteroatomsClassification(
         mass_spectrum, choose_molecular_formula=False
     )
-    mzplot = mass_spectrum_by_classes.plot_mz_error()
+    # mzplot = mass_spectrum_by_classes.plot_mz_error()
+    # mzplot.set_title("SRFA ppm error vs. m/z")
+    # mzplot.get_legend().remove()
     # scatter_plot = mzplot.collections[0]
     # scatter_plot.set_sizes([1])
     # plt.show()
@@ -569,6 +571,7 @@ def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
         if "*" in workflow_params.file_paths:
             p = Path(workflow_params.file_paths)
             workflow_params.file_paths = list(Path(p.parent).glob(p.name))
+            workflow_params.file_paths = [x for x in workflow_params.file_paths if x.suffix in (".d", ".raw")]
             workflow_params.file_paths = list(map(str, workflow_params.file_paths))
         # If no wildcard (single filepath), cast to list to match types later
         else:

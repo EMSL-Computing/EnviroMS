@@ -129,7 +129,7 @@ def create_database(corems_parameters_file, jobs):
 @click.option("--plot_ms_classes", "-mc", default=True, help="Plot MS classes")
 @click.option("--plot_mz_error_classes", "-ec", default=True, help="Plot m/z error classes")
 @click.option("--plot_qc", "-qc", default=True)
-@click.option("--jobs", "-j", default=4, help="'cpu's'")
+@click.option("--jobs", "-j", default=1, help="'cpu's'")
 def run_di_wdl(*args, **kwargs):
     """Run the Direct Infusion Workflow using wdl"""
 
@@ -138,9 +138,9 @@ def run_di_wdl(*args, **kwargs):
 
 @cli.command(name="run_di")
 @click.argument("di_workflow_parameters_file", required=True, type=str)
-@click.option("--jobs", "-j", default=4, help="'cpu's'")
+@click.option("--jobs", "-j", default=1, help="'cpu's'")
 @click.option("--replicas", "-r", default=1, help="data replicas")
-@click.option("--tasks", "-t", default=4, help="mpi tasks")
+@click.option("--tasks", "-t", default=1, help="mpi tasks")
 @click.option("--mpi", "-m", is_flag=True, help="run mpi version")
 def run_di(di_workflow_parameters_file, jobs, replicas, tasks, mpi):
     """Run the Direct Infusion Workflow\n
