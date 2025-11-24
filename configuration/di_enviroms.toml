@@ -1,7 +1,7 @@
 raw_file_start_scan = 1
 raw_file_final_scan = 7
 file_paths = "data/raw_data/*"
-output_directory = "output"
+output_directory = "data/output"
 output_group_name = "..."
 output_type = "csv"
 polarity = -1

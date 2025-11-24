@@ -29,6 +29,7 @@ from tqdm import tqdm
 from statistics import quantiles
 import pandas as pd
 import seaborn as sns
+import json
 
 
 @dataclass
@@ -439,7 +440,7 @@ def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, nc
 
 def workflow_worker(args):
     print("workflow worker")
-    file_location, workflow_params_toml_str, error_boundaries = args
+    file_location, workflow_params_toml_str, error_boundaries, batch_calibrate, srfa_path = args
 
     workflow_params = DiWorkflowParameters(**toml.loads(workflow_params_toml_str))
 
@@ -454,6 +455,14 @@ def workflow_worker(args):
             OUT_TYPE=workflow_params.output_type
         )
     )
+
+    # Add calib filename to settings output
+    if batch_calibrate:
+        print("adding to json")
+        with open(output_path.with_suffix(".json"), 'r+') as j:
+            file_data = json.load(j)
+            file_data["srfa_filename"] = srfa_path.stem
+            json.dump(file_data, j, sort_keys = True, indent = 4, separators = (",", ": "))
 
     create_plots(mass_spec, workflow_params, dirloc)
 
@@ -525,7 +534,7 @@ def find_calibration_for_batch(workflow_params):
     q = quantiles(mz_error, n = 20)
     search_error_boundaries = (q[0], q[18])
 
-    return (calib_error_boundaries, search_error_boundaries), workflow_params.file_paths
+    return (calib_error_boundaries, search_error_boundaries), workflow_params.file_paths, srfa_path
 
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
@@ -583,13 +592,13 @@ def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
 
     if workflow_params.batch_calibrate:
         # Before processing the samples, set calibration based on SRFA
-        error_boundaries, workflow_params.file_paths = find_calibration_for_batch(workflow_params)
+        error_boundaries, workflow_params.file_paths, srfa_path = find_calibration_for_batch(workflow_params)
     else:
         # Not used if not batch_calibrate, placeholder for run_assignment input
         error_boundaries = ()
 
     worker_args = replicas * [
-        (file_path, workflow_params.to_toml(), error_boundaries)
+        (file_path, workflow_params.to_toml(), error_boundaries, workflow_params.batch_calibrate, srfa_path)
         for file_path in workflow_params.file_paths
     ]
 
