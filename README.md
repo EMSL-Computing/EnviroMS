@@ -20,7 +20,7 @@
 
 ## Current Version
 
-### `5.0.0`
+### `5.1.0`
 
 ### Data input formats
 

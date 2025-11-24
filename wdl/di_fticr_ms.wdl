@@ -79,6 +79,6 @@ task runDirectInfusion {
     }
 
     runtime {
-        docker: "~{if defined(docker_image) then docker_image else 'microbiomedata/enviroms:5.0.0'}"
+        docker: "~{if defined(docker_image) then docker_image else 'microbiomedata/enviroms:5.1.0'}"
     }
 }
