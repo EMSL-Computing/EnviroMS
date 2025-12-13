@@ -514,55 +514,54 @@ def find_calibration_for_batch(workflow_params):
     # calib_error_boundaries = (mass_spectrum.settings.min_calib_ppm_error, mass_spectrum.settings.max_calib_ppm_error)
     # search_error_boundaries = (mass_spectrum.molecular_search_settings.min_ppm_error, mass_spectrum.molecular_search_settings.max_ppm_error)
 
-    for ppm_range in (15, 11, 9, 7, 5):
+    # Get calibration error bounds based on standard (usually SRFA)
+    calib_error_boundaries = HighResRecalibration(
+        mass_spectrum, plot=True,
+        docker = False, #ppmRangeprior = ppm_range
+    ).determine_error_boundaries()[2]
 
-        print("ppm range: ", ppm_range)
+    print("Boundaries from auto recalib: ", calib_error_boundaries)
 
-        # Get calibration error bounds based on standard (usually SRFA)
-        calib_error_boundaries = HighResRecalibration(
-            mass_spectrum, plot=True,
-            docker = False, ppmRangeprior = ppm_range
-        ).determine_error_boundaries()[2]
+    # Overwrite the min and max error tolerances with the values from calibration
+    mass_spectrum.settings.max_calib_ppm_error = max(calib_error_boundaries)
+    mass_spectrum.settings.min_calib_ppm_error = min(calib_error_boundaries)
 
-        print("Boundaries from auto recalib: ", calib_error_boundaries)
+    # Use new settings to calibrate
+    ref_file_location = Path(workflow_params.calibration_ref_file_path)
+    MzDomainCalibration(mass_spectrum, ref_file_location).run()
 
-        # Overwrite the min and max error tolerances with the values from calibration
-        mass_spectrum.settings.max_calib_ppm_error = max(calib_error_boundaries)
-        mass_spectrum.settings.min_calib_ppm_error = min(calib_error_boundaries)
+    # Identify molecular formulae
+    SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
-        # Use new settings to calibrate
-        ref_file_location = Path(workflow_params.calibration_ref_file_path)
-        MzDomainCalibration(mass_spectrum, ref_file_location).run()
+    # Extract the error distribution from the Heteroatoms class that makes error plots
+    mass_spectrum_by_classes = HeteroatomsClassification(
+        mass_spectrum, choose_molecular_formula=False
+    )
+    mzplot = mass_spectrum_by_classes.plot_mz_error()
+    mzplot.set_title("SRFA ppm error vs. m/z")
+    mzplot.get_legend().remove()
+    scatter_plot = mzplot.collections[0]
+    scatter_plot.set_sizes([1])
+    plt.savefig(Path(workflow_params.output_directory) / "mz.png")
 
-        # Identify molecular formulae
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+    mz_error = mass_spectrum_by_classes.mz_error_all()
 
-        # Extract the error distribution from the Heteroatoms class that makes error plots
-        mass_spectrum_by_classes = HeteroatomsClassification(
-            mass_spectrum, choose_molecular_formula=False
-        )
-        # mzplot = mass_spectrum_by_classes.plot_mz_error()
-        # mzplot.set_title("SRFA ppm error vs. m/z")
-        # mzplot.get_legend().remove()
-        # scatter_plot = mzplot.collections[0]
-        # scatter_plot.set_sizes([1])
-        # plt.show()
+    # Get percentiles of error to use as search error max/min
+    # i.e. retain the middle x% (vertically) of the points on the error plot
+    for ppm_range in ((0, 18), (1, 17), (2, 16), (3, 15), (4, 14), (5, 13), (6, 12), (7, 11)):
 
-        mz_error = mass_spectrum_by_classes.mz_error_all()
-
-        # Get 5th and 95th percentile of error to use as search error max/min
-        # i.e. retain the middle 90% (vertically) of the points on the error plot
         q = quantiles(mz_error, n = 20)
-        search_error_boundaries = (q[0], q[18])
-
+        search_error_boundaries = (q[ppm_range[0]], q[ppm_range[1]]) # start at 0 to 18 for 5% and 95%
         err_bound_diff = search_error_boundaries[1] - search_error_boundaries[0]
+        points_left = [i for i in mz_error if i > search_error_boundaries[0] and i < search_error_boundaries[1]]
+
         print("Search error boundaries: ", search_error_boundaries)
         print("Search error diff: ", err_bound_diff)
+        print("Number of points left: ", len(points_left))
 
+        # Exit loop once we get to reasonable error boundaries
         if err_bound_diff < 5:
             break
-
-    print(srfa_path, type(srfa_path))
 
     return (calib_error_boundaries, search_error_boundaries), workflow_params.file_paths, Path(srfa_path)
 
