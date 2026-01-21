@@ -498,7 +498,7 @@ def find_calibration_for_batch(workflow_params):
     print(srfa_path, type(srfa_path))
 
     # Remove the SRFA file you used from the file list so it's not in the output
-    #workflow_params.file_paths.remove(srfa_path)
+    workflow_params.file_paths.remove(srfa_path)
 
     # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(srfa_path, workflow_params)
