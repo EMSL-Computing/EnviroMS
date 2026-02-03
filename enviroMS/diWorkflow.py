@@ -71,7 +71,7 @@ class DiWorkflowParameters:
 
 
 def run_thermo_reduce_profile(file_location, first_scan, last_scan):
-    print("run thermo reduce profile")
+
     from corems.mass_spectra.input import rawFileReader
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
@@ -82,7 +82,7 @@ def run_thermo_reduce_profile(file_location, first_scan, last_scan):
 
 
 def run_bruker_transient(file_location, corems_params_path):
-    print("run bruker transient")
+
     with ReadBrukerSolarix(file_location) as transient:
         transient.set_parameter_from_toml(corems_params_path)
         mass_spectrum = transient.get_mass_spectrum(
@@ -93,7 +93,7 @@ def run_bruker_transient(file_location, corems_params_path):
 
 
 def get_masslist(file_location, corems_params_path, polarity, is_centroid):
-    print("get masslist")
+
     if is_centroid:
         reader = ReadMassList(file_location)
     else:
@@ -137,7 +137,6 @@ def read_fticr_raw_data(file_location, workflow_params):
 
 
 def run_assignment(file_location, workflow_params, error_boundaries):
-    print("run assignment")
 
     # Determine data file type and read in the mass spectrum
     mass_spectrum = read_fticr_raw_data(file_location, workflow_params)
@@ -173,7 +172,7 @@ def run_assignment(file_location, workflow_params, error_boundaries):
 
 
 def generate_database(corems_parameters_file, jobs):
-    print("generate database")
+
     """Create molecular formula database.
     corems_parameters_file: Path for CoreMS TOML Parameters file
     --jobs: Number of processes to run
@@ -197,7 +196,7 @@ def read_workflow_parameter(di_workflow_parameters_toml_file):
 
 
 def create_plots(mass_spectrum, workflow_params, dirloc):
-    print("create plots")
+
     # Prevent overflow error when plotting
     mpl.rcParams['agg.path.chunksize'] = 10000 
     
@@ -439,7 +438,7 @@ def create_qc_figure(msobj, msdf, title='QC Plot', figsize=(24, 10), nrows=2, nc
 
 
 def workflow_worker(args):
-    print("workflow worker")
+
     file_location, workflow_params_toml_str, error_boundaries, batch_calibrate, srfa_path = args
 
     workflow_params = DiWorkflowParameters(**toml.loads(workflow_params_toml_str))
@@ -567,8 +566,9 @@ def find_calibration_for_batch(workflow_params):
 
 
 def run_wdl_direct_infusion_workflow(*args, **kwargs):
-    print("run wdl direct infusion workflow")
 
+    cores = kwargs.get("jobs")
+    del kwargs["jobs"]
     kwargs["polarity"] = -1 if kwargs.get("polarity") == "negative" else 1
 
     workflow_params = DiWorkflowParameters(**kwargs)
@@ -598,7 +598,6 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
 
 
 def run_direct_infusion_workflow(workflow_params_file, jobs, replicas):
-    print("run direct infusion workflow")
 
     click.echo("Loading Searching Settings from %s" % workflow_params_file)
     workflow_params = read_workflow_parameter(workflow_params_file)
