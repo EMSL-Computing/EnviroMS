@@ -28,10 +28,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install miniwdl
 
-    - name: Run di WDL with pushed Docker Image
-      run: |
-        make docker-run-di
-
     - name: Build Docker Image
       run: |
         make docker-build-local
@@ -39,3 +35,7 @@ jobs:
     - name: Run di WDL with local Docker Image based on Dockerfile
       run: |
         make wdl-run-di
+
+    - name: Run di WDL with pushed Docker Image
+      run: |
+        make docker-run-di
