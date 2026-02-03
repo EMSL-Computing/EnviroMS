@@ -34,8 +34,8 @@ jobs:
 
     - name: Run di WDL with local Docker Image based on Dockerfile
       run: |
-        make wdl-run-di
+        miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
     - name: Run di WDL with pushed Docker Image
       run: |
-        make docker-run-di
+        make wdl-run-di

@@ -7,6 +7,7 @@
     "fticrmsNOM.runDirectInfusion.output_directory": "output",
     "fticrmsNOM.runDirectInfusion.output_type": "csv",
     "fticrmsNOM.runDirectInfusion.calibrate": true,
+    "fticrmsNOM.runDirectInfusion.batch_calibrate": true,
     "fticrmsNOM.runDirectInfusion.calibration_ref_file_path": "./data/reference/SRFA.ref",
     
     "fticrmsNOM.runDirectInfusion.corems_toml_path": "./configuration/di_corems.toml",
@@ -23,7 +24,6 @@
     "fticrmsNOM.runDirectInfusion.plot_ms_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_qc": true
-    
 
 }
 
