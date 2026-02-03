@@ -72,7 +72,7 @@ docker-build:
 
 docker-build-local:
 
-	docker build --pull --no-cache -t local-enviroms:latest .
+	docker build --pull --no-cache -t local-enviroms:$(version) .
 
 docker-run-di:
 
