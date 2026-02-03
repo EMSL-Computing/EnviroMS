@@ -536,12 +536,6 @@ def find_calibration_for_batch(workflow_params):
     mass_spectrum_by_classes = HeteroatomsClassification(
         mass_spectrum, choose_molecular_formula=False
     )
-    mzplot = mass_spectrum_by_classes.plot_mz_error()
-    mzplot.set_title("SRFA ppm error vs. m/z")
-    mzplot.get_legend().remove()
-    scatter_plot = mzplot.collections[0]
-    scatter_plot.set_sizes([1])
-    plt.savefig(Path(workflow_params.output_directory) / "mz.png")
 
     mz_error = mass_spectrum_by_classes.mz_error_all()
 
