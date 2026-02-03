@@ -1,7 +1,8 @@
 {
     
     "fticrmsNOM.runDirectInfusion.file_paths": [
-        "data/raw_data/SRFA_40ppm_NegativeESI_21T.raw"
+        "data/raw_data/SRFA_40ppm_NegativeESI_21T.raw",
+        "data/raw_data/NEG_ESI_SRFA_Auto.d"
     ],
 
     "fticrmsNOM.runDirectInfusion.output_directory": "output",

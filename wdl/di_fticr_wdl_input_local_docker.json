@@ -3,7 +3,7 @@
     
     "fticrmsNOM.runDirectInfusion.file_paths": [
         "data/raw_data/SRFA_40ppm_NegativeESI_21T.raw",
-        "data/raw_data/example_data/Brodie_151_w_r2_29Jan19_HESI_neg.raw"
+        "data/raw_data/NEG_ESI_SRFA_Auto.d"
     ],
 
     "fticrmsNOM.runDirectInfusion.output_directory": "output",
