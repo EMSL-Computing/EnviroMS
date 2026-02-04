@@ -566,7 +566,7 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
 
     if workflow_params.batch_calibrate:
         # Before processing the samples, set calibration based on SRFA
-        error_boundaries, workflow_params.file_paths = find_calibration_for_batch(workflow_params)
+        error_boundaries, workflow_params.file_paths, srfa_path = find_calibration_for_batch(workflow_params)
     else:
         # Not used if not batch_calibrate, placeholder for run_assignment input
         error_boundaries = ()
@@ -577,7 +577,7 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
 
     # Run workflow for every file in the list
     worker_args = [
-        (file_path, workflow_params.to_toml(), error_boundaries)
+        (file_path, workflow_params.to_toml(), error_boundaries, workflow_params.batch_calibrate, srfa_path)
         for file_path in workflow_params.file_paths
     ]
     file_path = Path(worker_args[0][0])
