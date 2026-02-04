@@ -508,11 +508,6 @@ def find_calibration_for_batch(workflow_params):
     # Force it to one job. daemon child can not have child process
     mass_spectrum.molecular_search_settings.db_jobs = 1
 
-    # Initial error boundaries
-    # err_bound_diff = 15 # default from HighResRecalibration definition
-    # calib_error_boundaries = (mass_spectrum.settings.min_calib_ppm_error, mass_spectrum.settings.max_calib_ppm_error)
-    # search_error_boundaries = (mass_spectrum.molecular_search_settings.min_ppm_error, mass_spectrum.molecular_search_settings.max_ppm_error)
-
     # Get calibration error bounds based on standard (usually SRFA)
     calib_error_boundaries = HighResRecalibration(
         mass_spectrum, plot=True,
