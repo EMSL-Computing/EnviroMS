@@ -570,6 +570,7 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
     else:
         # Not used if not batch_calibrate, placeholder for run_assignment input
         error_boundaries = ()
+        srfa_path = ""
 
     # Create output directory
     dirloc = Path(workflow_params.output_directory)
@@ -580,7 +581,6 @@ def run_wdl_direct_infusion_workflow(*args, **kwargs):
         (file_path, workflow_params.to_toml(), error_boundaries, workflow_params.batch_calibrate, srfa_path)
         for file_path in workflow_params.file_paths
     ]
-    file_path = Path(worker_args[0][0])
 
     for worker_arg in worker_args:
        workflow_worker(worker_arg)
