@@ -40,3 +40,11 @@ share/python-wheels/
 
 # Raw data files
 *.raw
+*.d
+data/raw_data/example_data/
+
+# Processed data
+output
+
+# Generated molecular formula database
+db/molformulas.sqlite

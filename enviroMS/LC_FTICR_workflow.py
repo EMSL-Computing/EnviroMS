@@ -463,7 +463,7 @@ def run_LC_FTICR_workflow(lc_fticr_workflow_paramaters_toml_file):
     """
 
     # read in LC_WorkflowParameters from toml file
-    with open(lc_fticr_workflow_paramaters_toml_file, "r") as infile:
+    with open(lc_fticr_workflow_parameters_toml_file, "r") as infile:
         lc_object = LC_FTICR_WorkflowParameters(**toml.load(infile))
     # call functions
     lc_object.create_temp_corems_toml()

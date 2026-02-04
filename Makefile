@@ -1,8 +1,8 @@
 app_name = enviroms
 parameters_path = data/enviroms.toml
 # change the path to your data path /Users/eber373/Desenvolvimento/enviroms
-data_dir = /Users/eber373/Development/enviroms/data
-configuration_dir = /Users/eber373/Development/enviroms/configuration
+data_dir = /home/bmeluch/enviroMS_work/example_data
+configuration_dir = /home/bmeluch/enviroMS_work/enviroms/configuration
 version := $(shell cat .bumpversion.cfg | grep current_version | cut -d= -f2 | tr -d ' ')
 stage := $(shell cat .bumpversion.cfg | grep optional_value | cut -d= -f2 | tr -d ' ') 
 
@@ -72,14 +72,26 @@ docker-build:
 
 docker-build-local:
 
-	docker build -t local-enviroms:$(version) .
-
+	docker build --pull --no-cache -t local-enviroms:latest .
 
 docker-run-di:
 
 	@echo $(data_dir)
 	@echo $(configuration_dir)
-	docker run -v $(data_dir):/enviroms/data -v $(configuration_dir):/enviroms/configuration microbiomedata/enviroms:$(version) run-di /enviroms/configuration/enviroms.toml
+	docker run -v $(data_dir):/enviroms/data -v $(configuration_dir):/enviroms/configuration microbiomedata/enviroms:$(version) run_di /enviroms/configuration/di_enviroms.toml
+
+docker-run-di-local:
+
+	@make docker-build-local
+	@echo $(data_dir)
+	@echo $(configuration_dir)
+	docker run \
+	-v $(data_dir):/enviroms/data/raw_data \
+	-v ./data/output:/enviroms/data/output \
+	-v ./data/reference:/enviroms/data/reference \
+	-v $(configuration_dir):/enviroms/configuration \
+	local-enviroms:latest \
+	enviroMS run_di /enviroms/configuration/di_enviroms.toml
 
 docker-run-lc:
 
@@ -91,13 +103,24 @@ cascade-run:
 
 	srun -A mscms -t 240 -N 1 -n time enviroMS run-di -r 2 --mpi  /dtemp/mscms/enviroms/data/configuration/enviroms.toml
 
+cli-run-di :
+	enviroMS run_di configuration/di_enviroms.toml --jobs 1 --replicas 1 --tasks 1
+
 wdl-run-di :
  	 
 	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
 
+wdl-run-di-local :
+	@make docker-build-local
+	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
+
 wdl-run-lc :
  	 
 	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+
+wdl-run-lc-local:
+
+	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
 get-lcms-fticr-test-data:
 
@@ -132,6 +155,4 @@ get-lcms-fticr-test-data:
 	else echo "Reference file exists"; fi
 	@echo "LC-MS FT-ICR test files complete"
 
-wdl-run-lc-local:
 
-	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files

@@ -1,4 +1,5 @@
 {
+    "fticrmsNOM.docker_image": "local-enviroms:latest",
     
     "fticrmsNOM.runDirectInfusion.file_paths": [
         "data/raw_data/SRFA_40ppm_NegativeESI_21T.raw"
@@ -24,6 +25,4 @@
     "fticrmsNOM.runDirectInfusion.plot_ms_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_mz_error_classes": false,
     "fticrmsNOM.runDirectInfusion.plot_qc": true
-
 }
-
