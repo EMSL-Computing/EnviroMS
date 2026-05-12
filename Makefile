@@ -106,13 +106,21 @@ cascade-run:
 cli-run-di :
 	enviroMS run_di configuration/di_enviroms.toml --jobs 1 --replicas 1 --tasks 1
 
-wdl-run-di :
+wdl-run-di-thermo :
  	 
-	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+	miniwdl run wdl/di_fticr_ms_thermo.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
 
-wdl-run-di-local :
+wdl-run-di-thermo-local :
 	@make docker-build-local
-	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
+	miniwdl run wdl/di_fticr_ms_thermo.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
+
+wdl-run-di-bruker :
+ 	 
+	miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+
+wdl-run-di-bruker-local :
+	@make docker-build-local
+	miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
 wdl-run-lc :
  	 

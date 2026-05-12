@@ -1,4 +1,4 @@
-version 1.0
+version 1.2
 
 workflow lc_ft_icr_ms {
     input {
