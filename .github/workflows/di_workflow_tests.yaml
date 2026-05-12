@@ -32,6 +32,14 @@ jobs:
       run: |
         make docker-build-local
 
+    - name: Run Bruker di WDL with local Docker Image based on Dockerfile
+      run: |
+        miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input_local_docker_bruker.json --verbose --no-cache --copy-input-files
+
+    - name: Run Bruker di WDL with pushed Docker Image
+      run: |
+        make wdl-run-di-bruker
+
     - name: Run di WDL with local Docker Image based on Dockerfile
       run: |
         miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
