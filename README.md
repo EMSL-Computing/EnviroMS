@@ -165,8 +165,11 @@ pip3 install miniwdl
 ```
 
 For Direct Infusion Workflow:
+
+_Note that for the direct infusion workflow, the WDL file used depends on the instrument/output file type. Use "Bruker" WDL for .d files and general WDL for ".raw" files._
+
 ```bash
-miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
+miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input.json --verbose --no-cache --copy-input-files
 ```
 For Liquid Chromatography Workflow:
 ```bash

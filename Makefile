@@ -114,6 +114,14 @@ wdl-run-di-local :
 	@make docker-build-local
 	miniwdl run wdl/di_fticr_ms.wdl -i wdl/di_fticr_wdl_input_local_docker.json --verbose --no-cache --copy-input-files
 
+wdl-run-di-bruker :
+ 	 
+	miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input_bruker.json --verbose --no-cache --copy-input-files
+
+wdl-run-di-bruker-local :
+	@make docker-build-local
+	miniwdl run wdl/di_fticr_ms_bruker.wdl -i wdl/di_fticr_wdl_input_local_docker_bruker.json --verbose --no-cache --copy-input-files
+
 wdl-run-lc :
  	 
 	miniwdl run wdl/lc_fticr_ms.wdl -i wdl/lc_fticr_wdl_input.json --verbose --no-cache --copy-input-files

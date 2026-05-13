@@ -23,7 +23,7 @@ workflow fticrmsNOM {
 
 task runDirectInfusion {
     input {
-        Array[File] file_paths
+        Array[Directory] file_paths
         String output_directory
         String output_type
         File corems_toml_path
